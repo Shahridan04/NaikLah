@@ -338,8 +338,8 @@ class TripDetailScreen extends StatelessWidget {
         return Icons.directions_bus;
       case 'lrt':
         return Icons.train;
-      case 'bicycle':
-        return Icons.pedal_bike;
+      case 'ev_car':
+        return Icons.electric_car;
       case 'walking':
         return Icons.directions_walk;
       default:

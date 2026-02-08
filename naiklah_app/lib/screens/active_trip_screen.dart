@@ -8,7 +8,8 @@ import '../services/trip_simulation_service.dart';
 import '../services/demo_route_data.dart';
 
 class ActiveTripScreen extends StatefulWidget {
-  const ActiveTripScreen({super.key});
+  final bool isWalking;
+  const ActiveTripScreen({super.key, this.isWalking = false});
 
   @override
   State<ActiveTripScreen> createState() => _ActiveTripScreenState();
@@ -339,9 +340,9 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Trip to Pudu Sentral',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          widget.isWalking ? 'Walking Trip' : 'Trip to Pudu Sentral',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: _isPanicActive ? alertRed : emeraldGreen,
         leading:
@@ -534,7 +535,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
                             point: animatedPos,
                             width: 60,
                             height: 60,
-                            child: _buildBusIcon(isOffRoute),
+                            child: _buildVehicleIcon(isOffRoute),
                           ),
                         ],
                       ),
@@ -633,7 +634,9 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Bus 190 (SBS3928X)',
+                                  widget.isWalking
+                                      ? 'Walking Route'
+                                      : 'Bus 190 (SBS3928X)',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -718,7 +721,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
     );
   }
 
-  Widget _buildBusIcon(bool isOffRoute) {
+  Widget _buildVehicleIcon(bool isOffRoute) {
     return Container(
       decoration: BoxDecoration(
         color: isOffRoute ? alertRed : emeraldGreen,
@@ -733,7 +736,9 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
         ],
       ),
       child: Icon(
-        isOffRoute ? Icons.warning_amber_rounded : Icons.directions_bus,
+        isOffRoute
+            ? Icons.warning_amber_rounded
+            : (widget.isWalking ? Icons.directions_walk : Icons.directions_bus),
         color: Colors.white,
         size: 32,
       ),

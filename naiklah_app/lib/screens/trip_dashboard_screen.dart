@@ -241,6 +241,13 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
 
     return GestureDetector(
       onTap: () {
+        if (mode.id == 'walking') {
+          setState(() {
+            _loggedMode = mode;
+            _tripLogged = true;
+          });
+          return;
+        }
         setState(() => _selectedModeId = mode.id);
         _showScanner = true;
         _loggedMode = mode;
@@ -358,8 +365,8 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
         return Icons.directions_bus;
       case 'lrt':
         return Icons.train;
-      case 'bicycle':
-        return Icons.pedal_bike;
+      case 'ev_car':
+        return Icons.electric_car;
       case 'walking':
         return Icons.directions_walk;
       case 'carpool':
@@ -377,7 +384,7 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
         return Colors.blue.withValues(alpha: 0.2);
       case 'lrt':
         return Colors.amber.withValues(alpha: 0.2);
-      case 'bicycle':
+      case 'ev_car':
         return emeraldGreen.withValues(alpha: 0.2);
       case 'walking':
         return emeraldGreen.withValues(alpha: 0.2);
@@ -396,7 +403,7 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
         return Colors.blue;
       case 'lrt':
         return Colors.amber.shade700;
-      case 'bicycle':
+      case 'ev_car':
         return emeraldGreen;
       case 'walking':
         return emeraldGreen;
@@ -1047,14 +1054,27 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
                   child: Icon(Icons.check, size: 64, color: emeraldGreen),
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Trip Logged!',
-                  style: TextStyle(
+                Text(
+                  _loggedMode?.id == 'walking'
+                      ? 'Walk Completed!'
+                      : 'Trip Logged!',
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
+                if (_loggedMode?.id == 'walking') ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    '2.4 km walked today 🏃‍♀️',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Text(
                   'You earned +${_loggedMode?.pointsPerTrip ?? 50} points',

@@ -31,12 +31,12 @@ class DashboardDataService {
         co2PerTripKg: 0.6,
       ),
       TransportModeInfo(
-        id: 'bicycle',
-        name: 'Bicycle',
-        description: 'Zero emissions',
-        iconName: 'pedal_bike',
+        id: 'ev_car',
+        name: 'EV Car',
+        description: 'Electric Vehicle',
+        iconName: 'electric_car',
         pointsPerTrip: 60,
-        co2PerTripKg: 0,
+        co2PerTripKg: 0.1,
       ),
       TransportModeInfo(
         id: 'walking',
