@@ -82,17 +82,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          // Logo at the top of profile
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E3A5F), // Navy for contrast
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Image.asset(
-              'assets/logo/logo.png',
-              height: 24,
-              fit: BoxFit.contain,
+          // Logo removed as per feedback
+          // Container(...),
+          const SizedBox(height: 24),
+          const Text(
+            "Profile",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 24),

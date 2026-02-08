@@ -23,6 +23,7 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
   LatLng _targetMarkerPos = const LatLng(3.147271, 101.699533);
 
   bool _isFollowingUser = true; // State for Follow Mode
+  bool _showSOSPanel = true; // State to toggle SOS CTA panel visibility
 
   @override
   void initState() {
@@ -102,9 +103,17 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
 
           if (!snapshot.hasData ||
               !snapshot.data!.exists ||
-              status != 'active' ||
+              (status != 'active' &&
+                  status != 'deviation' &&
+                  status != 'emergency' &&
+                  status != 'alert') ||
               locationData == null) {
             return _buildEmptyState();
+          }
+
+          // 1. TRIP COMPLETED CELEBRATION (Full Screen takeover)
+          if (status == 'ended') {
+            return _buildTripCompletedScreen();
           }
 
           final isDeviation = data?['isDeviation'] as bool? ?? false;
@@ -177,45 +186,14 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
                           ),
                         ],
                       ),
-                      // Current Bus Marker with Smooth Animation
+                      // Current Bus Marker with Smooth Animation & Pulse
                       MarkerLayer(
                         markers: [
                           Marker(
                             point: animatedPos,
-                            width: 100,
-                            height: 100,
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        blurRadius: 4,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Text(
-                                    "Pink Bus 01",
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.pink,
-                                    ),
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.directions_bus,
-                                  color: Colors.pink, // "Pink Bus"
-                                  size: 48,
-                                ),
-                              ],
-                            ),
+                            width: 120, // Increased for pulse
+                            height: 120,
+                            child: _buildVehicleMarker(status),
                           ),
                         ],
                       ),
@@ -237,6 +215,17 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
                   ),
                 ),
 
+              // SOS Mini FAB (shows when panel is hidden during emergency)
+              if ((status == 'emergency' ||
+                      status == 'deviation' ||
+                      isDeviation) &&
+                  !_showSOSPanel)
+                Positioned(
+                  top: _isFollowingUser ? 100 : 160,
+                  right: 16,
+                  child: _buildSOSMiniFab(),
+                ),
+
               // Bus Detail & Status Card
               Positioned(
                 bottom: 30,
@@ -244,9 +233,67 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
                 right: 16,
                 child: Column(
                   children: [
-                    _buildDriverInfoCard(),
+                    if (status != 'emergency' &&
+                        status != 'deviation' &&
+                        !isDeviation)
+                      _buildDriverInfoCard(),
                     const SizedBox(height: 12),
-                    _buildStatusCard(status, isDeviation),
+                    // Only show status card when panel is visible OR when not in emergency
+                    if (_showSOSPanel ||
+                        (status != 'emergency' &&
+                            status != 'deviation' &&
+                            !isDeviation))
+                      _buildStatusCard(status, isDeviation),
+                    // EMERGENCY CTAs with dismiss button
+                    if ((status == 'emergency' ||
+                            status == 'deviation' ||
+                            isDeviation) &&
+                        _showSOSPanel) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {},
+                              icon: const Icon(Icons.call),
+                              label: const Text("Call Driver"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black87,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {},
+                              icon: const Icon(Icons.local_police),
+                              label: const Text("Call Police"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Dismiss button to hide the SOS panel
+                      TextButton.icon(
+                        onPressed: () => setState(() => _showSOSPanel = false),
+                        icon: const Icon(Icons.close, size: 18),
+                        label: const Text("Dismiss Alert Panel"),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white70,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -354,8 +401,13 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
     String title = "On Route";
     String subtitle = "Sarah is on the correct path";
 
-    if (isDeviation || status == 'alert') {
+    if (status == 'emergency') {
       iconColor = Colors.red;
+      icon = Icons.campaign; // SOS Icon
+      title = "SOS ALERT ACTIVATED";
+      subtitle = "Sarah has triggered an SOS!";
+    } else if (isDeviation || status == 'deviation' || status == 'alert') {
+      iconColor = Colors.orange;
       icon = Icons.warning_rounded;
       title = "ROUTE DEVIATION ALERT";
       subtitle = "Bus has veered off the safe route!";
@@ -367,7 +419,7 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
     }
 
     return Card(
-      color: isDeviation ? Colors.red : Colors.white,
+      color: (status == 'emergency' || isDeviation) ? Colors.red : Colors.white,
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -377,14 +429,16 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDeviation
+                color: (status == 'emergency' || isDeviation)
                     ? Colors.white
                     : iconColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                color: isDeviation ? Colors.red : iconColor,
+                color: (status == 'emergency' || isDeviation)
+                    ? Colors.red
+                    : iconColor,
                 size: 32,
               ),
             ),
@@ -399,7 +453,9 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDeviation ? Colors.white : Colors.black87,
+                      color: (status == 'emergency' || isDeviation)
+                          ? Colors.white
+                          : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -407,7 +463,7 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
                     subtitle,
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDeviation
+                      color: (status == 'emergency' || isDeviation)
                           ? Colors.white.withValues(alpha: 0.9)
                           : Colors.grey.shade600,
                     ),
@@ -418,6 +474,190 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
           ],
         ),
       ),
+    );
+  }
+
+  // SOS Mini FAB with pulse animation
+  Widget _buildSOSMiniFab() {
+    return GestureDetector(
+      onTap: () => setState(() => _showSOSPanel = true),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.red,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.red.withValues(alpha: 0.5),
+              blurRadius: 12,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Pulse animation
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.8, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                );
+              },
+              onEnd: () {},
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.warning, color: Colors.white, size: 20),
+                const Text(
+                  "SOS",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // NEW: Full Screen Trip Completed Celebration
+  Widget _buildTripCompletedScreen() {
+    return Container(
+      color: Colors.white,
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 80,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            "Safe Arrival Confirmed!",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Sarah has arrived safely at the destination.",
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const SizedBox(
+                width: double.infinity,
+                child: Text(
+                  "Done",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVehicleMarker(String status) {
+    bool isEmergency =
+        status == 'emergency' || status == 'deviation' || status == 'alert';
+    Color color = isEmergency ? Colors.red : Colors.pink;
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: Text(
+            "Pink Bus 01",
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // Pulse Animation for Emergency
+            if (isEmergency)
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(seconds: 1),
+                builder: (context, value, child) {
+                  return Container(
+                    width: 60 + (value * 20),
+                    height: 60 + (value * 20),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.red.withValues(alpha: 0.5 * (1 - value)),
+                    ),
+                  );
+                },
+                onEnd:
+                    () {}, // Loop handled by parent rebuilds or could use Controller
+              ),
+            Icon(Icons.directions_bus, color: color, size: 48),
+          ],
+        ),
+      ],
     );
   }
 }

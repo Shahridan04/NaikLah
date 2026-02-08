@@ -79,6 +79,9 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
     // 2. Start Pulse Animation
     _panicPulseController.repeat(reverse: true);
 
+    // Update Simulation Service to prevent overwrite
+    TripSimulationService().setEmergency(true);
+
     // Update Firestore to trigger alert on Mom's phone
     await _firestore.collection('trips').doc('demo_trip').update({
       'status': 'emergency',
@@ -215,6 +218,14 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
   void _endTrip(String status) {
     // Stop simulation
     TripSimulationService().stopSimulation();
+
+    // CRITICAL: Update Firestore so Guardian knows trip ended!
+    if (status != 'ended') {
+      _firestore.collection('trips').doc('demo_trip').update({
+        'status': 'ended',
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    }
 
     if (status == 'emergency' || status == 'deviation' || status == 'alert') {
       // Provide haptic feedback for bad trip too? maybe not.
@@ -688,10 +699,16 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton.icon(
-                            onPressed: _isPanicActive ? null : _triggerPanic,
-                            icon: const Icon(Icons.sos, size: 28),
+                            // Allow multiple clicks to spam the alert
+                            onPressed: _triggerPanic,
+                            icon: const Icon(
+                              Icons.notifications_active,
+                              size: 28,
+                            ),
                             label: Text(
-                              _isPanicActive ? 'SOS SENT' : 'EMERGENCY SOS',
+                              _isPanicActive
+                                  ? 'SENDING ALERT...'
+                                  : 'EMERGENCY ALERT',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -699,7 +716,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen>
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _isPanicActive
-                                  ? Colors.grey
+                                  ? alertRed.withValues(alpha: 0.8)
                                   : alertRed,
                               foregroundColor: Colors.white,
                               elevation: 4,

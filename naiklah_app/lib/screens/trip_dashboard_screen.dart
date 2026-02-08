@@ -94,10 +94,9 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
-        title: Image.asset(
-          'assets/logo/logo.png',
-          height: 24,
-          fit: BoxFit.contain,
+        title: const Text(
+          "Trips",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
       body: SingleChildScrollView(

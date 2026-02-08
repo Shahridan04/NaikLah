@@ -21,6 +21,18 @@ class TripSimulationService {
   // Simulation state
   int _currentIndex = 0;
   bool _isDeviationTriggered = false;
+  bool _isEmergency = false; // Add emergency flag
+
+  /// Sets the emergency state to prevent status overwrites
+  void setEmergency(bool isEmergency) {
+    _isEmergency = isEmergency;
+    if (_isEmergency) {
+      _firestore.collection('trips').doc(_tripId).update({
+        'status': 'emergency',
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    }
+  }
 
   /// Starts the trip simulation
   /// [triggerDeviation] - If true, the bus will veer off course
@@ -29,6 +41,7 @@ class TripSimulationService {
     stopSimulation();
 
     _isDeviationTriggered = triggerDeviation;
+    _isEmergency = false; // Reset emergency state
     _currentIndex = 1; // Start at 1 since 0 is set as initial position
 
     final route = DemoRouteData.getSimulationPoints(
@@ -69,13 +82,21 @@ class TripSimulationService {
       // Deviation starts after roughly 30% of the trip (index 20 with 10x steps)
       bool isDeviation = _isDeviationTriggered && _currentIndex > 25;
 
+      // Determine status based on priority: Emergency > Deviation > Active
+      String newStatus = 'active';
+      if (_isEmergency) {
+        newStatus = 'emergency';
+      } else if (isDeviation) {
+        newStatus = 'alert'; // or 'deviation'
+      }
+
       await _firestore.collection('trips').doc(_tripId).update({
         'currentLocation': {
           'latitude': point.latitude,
           'longitude': point.longitude,
         },
         'isDeviation': isDeviation,
-        'status': isDeviation ? 'alert' : 'active',
+        'status': newStatus,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
