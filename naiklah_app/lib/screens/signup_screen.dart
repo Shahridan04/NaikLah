@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
-import 'home_screen.dart';
+import 'ic_scan_screen.dart';
 
 /// Multi-step signup screen
 /// Step 1: Gender Selection
@@ -31,7 +31,6 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _selectedGender;
   final Set<String> _selectedTransport = {};
   bool _prefersWomenOnly = false;
-  String? _selectedCompany;
   bool _isLoading = false;
 
   // Get theme color based on gender
@@ -46,17 +45,6 @@ class _SignupScreenState extends State<SignupScreen> {
     {'id': 'walk', 'name': 'Walking', 'icon': Icons.directions_walk},
     {'id': 'carpool', 'name': 'Carpool', 'icon': Icons.people},
     {'id': 'scooter', 'name': 'E-Scooter', 'icon': Icons.electric_scooter},
-  ];
-
-  // Companies
-  final List<String> _companies = [
-    'Select your company',
-    'Grab Malaysia',
-    'Petronas',
-    'Maybank',
-    'AirAsia',
-    'Tenaga Nasional',
-    'Other',
   ];
 
   @override
@@ -74,7 +62,7 @@ class _SignupScreenState extends State<SignupScreen> {
       );
       return;
     }
-    if (_currentStep < 2) {
+    if (_currentStep < 1) {
       setState(() => _currentStep++);
     } else {
       _completeSignup();
@@ -102,16 +90,15 @@ class _SignupScreenState extends State<SignupScreen> {
           : 'user@example.com',
       password: _passwordController.text,
       gender: _selectedGender ?? 'female',
-      company: _selectedCompany,
+      company: null,
       preferredTransport: _selectedTransport.toList(),
       prefersWomenOnlyTransport: _prefersWomenOnly,
     );
 
     if (mounted) {
-      Navigator.pushAndRemoveUntil(
+      Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
+        MaterialPageRoute(builder: (_) => const ICScanScreen()),
       );
     }
   }
@@ -155,17 +142,17 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         children: [
           Text(
-            'Step ${_currentStep + 1} of 3',
+            'Step ${_currentStep + 1} of 2',
             style: TextStyle(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 12),
           Row(
-            children: List.generate(3, (index) {
+            children: List.generate(2, (index) {
               final isActive = index <= _currentStep;
               return Expanded(
                 child: Container(
                   height: 4,
-                  margin: EdgeInsets.only(right: index < 2 ? 8 : 0),
+                  margin: EdgeInsets.only(right: index < 1 ? 8 : 0),
                   decoration: BoxDecoration(
                     color: isActive ? _themeColor : Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(2),
@@ -185,8 +172,6 @@ class _SignupScreenState extends State<SignupScreen> {
         return _buildGenderStep();
       case 1:
         return _buildTransportStep();
-      case 2:
-        return _buildCompanyStep();
       default:
         return const SizedBox();
     }
@@ -416,144 +401,6 @@ class _SignupScreenState extends State<SignupScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  /// Step 3: Company Details (with Women-Only option for females)
-  Widget _buildCompanyStep() {
-    final isFemale = _selectedGender == 'female';
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: emeraldGreen.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.check_circle, color: emeraldGreen, size: 48),
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'Company Details',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Help us personalize your experience',
-          style: TextStyle(color: Colors.grey.shade600),
-        ),
-        const SizedBox(height: 32),
-        // Company dropdown
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: DropdownButton<String>(
-            value: _selectedCompany ?? _companies.first,
-            isExpanded: true,
-            underline: const SizedBox(),
-            icon: const Icon(Icons.keyboard_arrow_down),
-            items: _companies.map((company) {
-              return DropdownMenuItem(value: company, child: Text(company));
-            }).toList(),
-            onChanged: (value) {
-              setState(() => _selectedCompany = value);
-            },
-          ),
-        ),
-        // Women-Only Pink Bus Option (only for females)
-        if (isFemale) ...[
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: hotPink.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: hotPink.withValues(alpha: 0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: hotPink.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.directions_bus, color: hotPink),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Women-Only Pink Bus Option',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Safe, dedicated transport with female drivers, GPS tracking, and emergency SOS features. Perfect for night shifts and enhanced peace of mind.',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                // Toggle
-                GestureDetector(
-                  onTap: () =>
-                      setState(() => _prefersWomenOnly = !_prefersWomenOnly),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _prefersWomenOnly
-                                ? hotPink
-                                : Colors.grey.shade400,
-                            width: 2,
-                          ),
-                          color: _prefersWomenOnly
-                              ? hotPink
-                              : Colors.transparent,
-                        ),
-                        child: _prefersWomenOnly
-                            ? const Icon(
-                                Icons.check,
-                                size: 16,
-                                color: Colors.white,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Yes, I prefer Pink Bus options',
-                        style: TextStyle(
-                          color: _prefersWomenOnly
-                              ? hotPink
-                              : Colors.grey.shade700,
-                          fontWeight: _prefersWomenOnly
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
     );
   }
 
