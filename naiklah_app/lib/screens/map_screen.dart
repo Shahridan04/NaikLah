@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/bus_model.dart';
 import '../services/mock_data_service.dart';
+import '../services/demo_route_data.dart';
 
 /// MapScreen - Main map view with Pink Safety Filter
 /// Displays bus locations on OpenStreetMap with toggle for women-only buses
@@ -47,6 +48,9 @@ class _MapScreenState extends State<MapScreen> {
     return _allBuses;
   }
 
+  // Route State
+  List<LatLng> _selectedBusRoute = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +67,12 @@ class _MapScreenState extends State<MapScreen> {
               initialZoom: 14.0,
               minZoom: 10.0,
               maxZoom: 18.0,
+              onTap: (_, __) {
+                // Clear route when tapping map
+                if (_selectedBusRoute.isNotEmpty) {
+                  setState(() => _selectedBusRoute = []);
+                }
+              },
             ),
             children: [
               // OpenStreetMap Tile Layer
@@ -70,6 +80,19 @@ class _MapScreenState extends State<MapScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.naiklah.app',
               ),
+              // Bus Route Layer (Blue Line)
+              if (_selectedBusRoute.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _selectedBusRoute,
+                      strokeWidth: 5.0,
+                      color: Colors.blue.withValues(alpha: 0.7),
+                      strokeCap: StrokeCap.round,
+                      strokeJoin: StrokeJoin.round,
+                    ),
+                  ],
+                ),
               // Bus Markers Layer
               MarkerLayer(markers: _buildBusMarkers()),
             ],
@@ -139,8 +162,9 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildFilterCard() {
     return Container(
       decoration: BoxDecoration(
+        // Fix: Use a solid white background mixed with pink, instead of transparency
         color: _pinkFilterEnabled
-            ? hotPink.withValues(alpha: 0.1)
+            ? Color.alphaBlend(hotPink.withValues(alpha: 0.1), Colors.white)
             : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
@@ -258,6 +282,14 @@ class _MapScreenState extends State<MapScreen> {
 
   /// Show bus details bottom sheet
   void _showBusDetails(BusModel bus) {
+    // 1. Set the route for visualization
+    setState(() {
+      // In a real app, fetch route by bus ID. Here we use the demo safe route.
+      // We'll reverse it or offset it slightly for varity if needed,
+      // but for now just use the demo route.
+      _selectedBusRoute = DemoRouteData.safeRoute;
+    });
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -438,7 +470,14 @@ class _MapScreenState extends State<MapScreen> {
           ),
         );
       },
-    );
+    ).whenComplete(() {
+      // Clear the route when bottom sheet closes
+      if (mounted) {
+        setState(() {
+          _selectedBusRoute = [];
+        });
+      }
+    });
   }
 
   Widget _buildInfoTile(

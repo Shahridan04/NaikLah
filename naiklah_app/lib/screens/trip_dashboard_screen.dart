@@ -3,6 +3,9 @@ import '../models/trip_dashboard_model.dart';
 import '../models/transport_model.dart';
 import '../services/dashboard_data_service.dart';
 import '../services/trip_data_service.dart';
+import '../services/trip_simulation_service.dart';
+import 'active_trip_screen.dart';
+import 'trip_detail_screen.dart';
 
 /// Trip Dashboard Screen - Complete implementation matching Figma
 /// Includes: Transport selection, Recent Trips, Leaderboard, Achievements
@@ -60,6 +63,13 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
       return _allRoutes.where((r) => r.isWomenOnly).toList();
     }
     return _allRoutes;
+  }
+
+  List<TransportModeInfo> get _filteredTransportModes {
+    if (_filterWomenOnly && !_isMale) {
+      return _transportModes.where((m) => m.isWomenOnly).toList();
+    }
+    return _transportModes;
   }
 
   @override
@@ -124,6 +134,11 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
 
             // Manual Entry Option
             _buildManualEntryCard(),
+            const SizedBox(height: 16),
+
+            // Demo Controls (Hackathon Special)
+            _buildDemoCard(),
+            const SizedBox(height: 24),
             const SizedBox(height: 24),
 
             // Recent Trips Section
@@ -212,9 +227,9 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
         mainAxisSpacing: 12,
         childAspectRatio: 0.65, // Reduced from 0.85 to fix overflow
       ),
-      itemCount: _transportModes.length,
+      itemCount: _filteredTransportModes.length,
       itemBuilder: (context, index) {
-        final mode = _transportModes[index];
+        final mode = _filteredTransportModes[index];
         final isSelected = _selectedModeId == mode.id;
         return _buildTransportCard(mode, isSelected);
       },
@@ -671,59 +686,71 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
   Widget _buildTripItem(TripRecord trip) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: trip.transportMode == 'pink_bus'
-                  ? hotPink.withValues(alpha: 0.2)
-                  : emeraldGreen.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TripDetailScreen(trip: trip),
             ),
-            child: Icon(
-              Icons.directions_bus,
-              color: trip.transportMode == 'pink_bus' ? hotPink : emeraldGreen,
-              size: 16,
+          );
+        },
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: trip.transportMode == 'pink_bus'
+                    ? hotPink.withValues(alpha: 0.2)
+                    : emeraldGreen.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.directions_bus,
+                color: trip.transportMode == 'pink_bus'
+                    ? hotPink
+                    : emeraldGreen,
+                size: 16,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    trip.routeName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    trip.formattedTime,
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  trip.routeName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+                  '+${trip.pointsEarned} pts',
+                  style: TextStyle(
+                    color: emeraldGreen,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
                   ),
                 ),
                 Text(
-                  trip.formattedTime,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  '${trip.co2Saved}kg CO₂ saved',
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '+${trip.pointsEarned} pts',
-                style: TextStyle(
-                  color: emeraldGreen,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                '${trip.co2Saved}kg CO₂ saved',
-                style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1079,6 +1106,97 @@ class _TripDashboardScreenState extends State<TripDashboardScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDemoCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.science, color: Colors.amber, size: 24),
+              const SizedBox(width: 12),
+              const Text(
+                'Demo Controls',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Simulate a trip for the Guardian to track.',
+            style: TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+          const SizedBox(height: 16),
+          // SAFE TRIP BUTTON
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                // 1. Start simulation (Safe)
+                await TripSimulationService().startSimulation(
+                  triggerDeviation: false,
+                );
+
+                // 2. Navigate to Active Trip Screen (Daughter's View)
+                if (context.mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ActiveTripScreen()),
+                  );
+                }
+              },
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text('Start Safe Trip (No Deviation)'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: emeraldGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // RISKY TRIP BUTTON
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                // 1. Start simulation (Risky)
+                await TripSimulationService().startSimulation(
+                  triggerDeviation: true,
+                );
+
+                // 2. Navigate to Active Trip Screen (Daughter's View)
+                if (context.mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ActiveTripScreen()),
+                  );
+                }
+              },
+              icon: const Icon(Icons.warning_amber_rounded),
+              label: const Text('Start Risky Trip (With Deviation 🚨)'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

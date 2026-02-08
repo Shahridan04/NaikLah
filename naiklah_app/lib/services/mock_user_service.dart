@@ -1,5 +1,5 @@
 /// Mock User Data Service
-/// Provides pre-configured male and female users for testing
+/// Provides pre-configured male, female, and guardian users for testing
 
 class MockUser {
   final String id;
@@ -8,6 +8,7 @@ class MockUser {
   final String name;
   final String gender; // 'male' or 'female'
   final int points;
+  final bool isGuardian; // New field for guardian role
 
   const MockUser({
     required this.id,
@@ -16,6 +17,7 @@ class MockUser {
     required this.name,
     required this.gender,
     required this.points,
+    this.isGuardian = false,
   });
 
   bool get isFemale => gender == 'female';
@@ -40,6 +42,15 @@ class MockUserService {
       gender: 'male',
       points: 1450,
     ),
+    MockUser(
+      id: 'user_guardian',
+      email: 'mom@test.com',
+      password: '123456',
+      name: 'Madam Wong (Mom)',
+      gender: 'female',
+      points: 500,
+      isGuardian: true,
+    ),
   ];
 
   /// Get female test user
@@ -47,6 +58,9 @@ class MockUserService {
 
   /// Get male test user
   static MockUser get maleUser => users[1];
+
+  /// Get guardian test user
+  static MockUser get guardianUser => users[2];
 
   /// Authenticate user by email/password
   static MockUser? authenticate(String email, String password) {

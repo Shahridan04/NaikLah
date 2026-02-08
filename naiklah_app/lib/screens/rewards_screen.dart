@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/reward_model.dart';
+import '../models/user_model.dart';
 import '../services/rewards_data_service.dart';
+import '../services/user_service.dart';
+import 'points_history_screen.dart';
 
 /// Rewards Screen - Based on Figma design
 /// Shows points balance, featured rewards, all rewards grid, and redemption history
@@ -18,7 +21,6 @@ class _RewardsScreenState extends State<RewardsScreen> {
   static const Color deepPurple = Color(0xFF8B5CF6);
   static const Color brightBlue = Color(0xFF3B82F6);
 
-  late UserPointsModel userPoints;
   late List<RewardModel> featuredRewards;
   late List<RewardModel> allRewards;
   late List<RedemptionModel> recentRedemptions;
@@ -26,7 +28,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
   @override
   void initState() {
     super.initState();
-    userPoints = RewardsDataService.getUserPoints();
+    // userPoints = RewardsDataService.getUserPoints(); // REMOVED: Using UserService
     featuredRewards = RewardsDataService.getFeaturedRewards();
     allRewards = RewardsDataService.getAllRewards();
     recentRedemptions = RewardsDataService.getRecentRedemptions();
@@ -35,44 +37,50 @@ class _RewardsScreenState extends State<RewardsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // Gradient Header with Points
-          _buildGradientHeader(),
-          // Content
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Featured Rewards
-                  _buildSectionTitle('Featured Rewards'),
-                  const SizedBox(height: 12),
-                  _buildFeaturedRewards(),
-                  const SizedBox(height: 24),
-                  // All Rewards
-                  _buildSectionTitle('All Rewards'),
-                  const SizedBox(height: 12),
-                  _buildAllRewardsGrid(),
-                  const SizedBox(height: 24),
-                  // Recent Redemptions
-                  _buildRecentRedemptions(),
-                  const SizedBox(height: 24),
-                  // Coming Soon Banner
-                  _buildComingSoonBanner(),
-                  const SizedBox(height: 24),
-                ],
+      body: ValueListenableBuilder<UserModel?>(
+        valueListenable: UserService().currentUserNotifier,
+        builder: (context, user, child) {
+          final currentPoints = user?.points ?? 0;
+          return CustomScrollView(
+            slivers: [
+              // Gradient Header with Points
+              _buildGradientHeader(currentPoints),
+              // Content
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Featured Rewards
+                      _buildSectionTitle('Featured Rewards'),
+                      const SizedBox(height: 12),
+                      _buildFeaturedRewards(currentPoints),
+                      const SizedBox(height: 24),
+                      // All Rewards
+                      _buildSectionTitle('All Rewards'),
+                      const SizedBox(height: 12),
+                      _buildAllRewardsGrid(currentPoints),
+                      const SizedBox(height: 24),
+                      // Recent Redemptions
+                      _buildRecentRedemptions(),
+                      const SizedBox(height: 24),
+                      // Coming Soon Banner
+                      _buildComingSoonBanner(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
 
   /// Gradient Header with Points Balance
-  Widget _buildGradientHeader() {
+  Widget _buildGradientHeader(int points) {
     return SliverToBoxAdapter(
       child: Container(
         decoration: const BoxDecoration(
@@ -89,26 +97,40 @@ class _RewardsScreenState extends State<RewardsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
-                const Padding(
-                  padding: EdgeInsets.only(left: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Rewards',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                // Title and History Icon
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Rewards',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Redeem your points for exciting rewards',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                    ],
-                  ),
+                        Text(
+                          'Redeem your points for exciting rewards',
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PointsHistoryScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.history, color: Colors.white),
+                      tooltip: 'Points History',
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 // Points Balance Card
@@ -125,6 +147,13 @@ class _RewardsScreenState extends State<RewardsScreen> {
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -141,7 +170,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${userPoints.currentPoints}',
+                            '$points',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 48,
@@ -150,7 +179,21 @@ class _RewardsScreenState extends State<RewardsScreen> {
                           ),
                         ],
                       ),
-                      const Icon(Icons.star, color: Colors.amber, size: 48),
+                      // Animated Star Icon
+                      TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0.8, end: 1.0),
+                        duration: const Duration(seconds: 1),
+                        builder: (context, value, child) {
+                          return Transform.scale(scale: value, child: child);
+                        },
+                        onEnd: () {}, // Loop could be implemented here
+                        curve: Curves.elasticOut,
+                        child: const Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                          size: 48,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -174,22 +217,26 @@ class _RewardsScreenState extends State<RewardsScreen> {
   }
 
   /// Featured Rewards (horizontal cards)
-  Widget _buildFeaturedRewards() {
+  Widget _buildFeaturedRewards(int currentPoints) {
     return SizedBox(
-      height: 200, // Increased from 180 to fix overflow
+      height: 200,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: featuredRewards.length,
         itemBuilder: (context, index) {
           final reward = featuredRewards[index];
           final isGreen = index == 0;
-          return _buildFeaturedRewardCard(reward, isGreen);
+          return _buildFeaturedRewardCard(reward, isGreen, currentPoints);
         },
       ),
     );
   }
 
-  Widget _buildFeaturedRewardCard(RewardModel reward, bool isGreen) {
+  Widget _buildFeaturedRewardCard(
+    RewardModel reward,
+    bool isGreen,
+    int currentPoints,
+  ) {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 12),
@@ -275,10 +322,13 @@ class _RewardsScreenState extends State<RewardsScreen> {
                 ],
               ),
               ElevatedButton(
-                onPressed: () => _redeemReward(reward),
+                onPressed: currentPoints >= reward.points
+                    ? () => _redeemReward(reward)
+                    : null, // Disable if not enough points
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: isGreen ? emeraldGreen : brightBlue,
+                  disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
@@ -297,7 +347,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
   }
 
   /// All Rewards Grid
-  Widget _buildAllRewardsGrid() {
+  Widget _buildAllRewardsGrid(int currentPoints) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -305,16 +355,17 @@ class _RewardsScreenState extends State<RewardsScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.55, // Further reduced to fix 9.2px overflow
+        childAspectRatio: 0.55,
       ),
       itemCount: allRewards.length,
       itemBuilder: (context, index) {
-        return _buildRewardCard(allRewards[index]);
+        return _buildRewardCard(allRewards[index], currentPoints);
       },
     );
   }
 
-  Widget _buildRewardCard(RewardModel reward) {
+  Widget _buildRewardCard(RewardModel reward, int currentPoints) {
+    final canRedeem = currentPoints >= reward.points;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -396,7 +447,9 @@ class _RewardsScreenState extends State<RewardsScreen> {
                   Text(
                     '${reward.points}',
                     style: TextStyle(
-                      color: _getCategoryColor(reward.category),
+                      color: canRedeem
+                          ? _getCategoryColor(reward.category)
+                          : Colors.grey,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -427,10 +480,11 @@ class _RewardsScreenState extends State<RewardsScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => _redeemReward(reward),
+              onPressed: canRedeem ? () => _redeemReward(reward) : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: hotPink,
                 foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey.shade300,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -449,6 +503,10 @@ class _RewardsScreenState extends State<RewardsScreen> {
 
   /// Recent Redemptions Section
   Widget _buildRecentRedemptions() {
+    // Show mock + real history from UserService if we want, but for now let's keep the mock list as "Recent Global Redemptions" or similar,
+    // OR we could link this to UserService history?
+    // The prompt asked for "Points History" screen separately.
+    // Let's leave this as "Recent" (static mock for now to fill space)
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -557,6 +615,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.9),
               fontSize: 14,
+              fontWeight: FontWeight.bold, // Fixed font weight
             ),
             textAlign: TextAlign.center,
           ),
@@ -644,55 +703,74 @@ class _RewardsScreenState extends State<RewardsScreen> {
 
   /// Redeem reward action
   void _redeemReward(RewardModel reward) {
-    if (userPoints.currentPoints >= reward.points) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text('Confirm Redemption'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _getRewardIcon(reward.iconType, hotPink, 48),
-              const SizedBox(height: 16),
-              Text(
-                reward.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+    // 1. Confirm Dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Confirm Redemption'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: hotPink.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 8),
-              Text('${reward.points} points will be deducted'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: _getRewardIcon(reward.iconType, hotPink, 48),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showRedemptionSuccess(reward);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: hotPink,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Confirm'),
+            const SizedBox(height: 16),
+            Text(
+              'Redeem for ${reward.points} points?',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              reward.name,
+              style: TextStyle(color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _processRedemption(reward);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: hotPink,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _processRedemption(RewardModel reward) async {
+    // 2. Deduct Points via UserService
+    final success = UserService().deductPoints(
+      reward.points,
+      'Redeemed ${reward.name}',
+    );
+
+    if (success) {
+      // 3. Show Success Dialog
+      _showRedemptionSuccess(reward);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Not enough points for this reward'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Error: Insufficient points!')),
       );
     }
   }
@@ -705,33 +783,55 @@ class _RewardsScreenState extends State<RewardsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: emeraldGreen.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle,
-                color: emeraldGreen,
-                size: 64,
-              ),
+            // Success Icon with simple scale animation (pseudo confetti)
+            TweenAnimationBuilder(
+              duration: const Duration(milliseconds: 600),
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              curve: Curves.elasticOut,
+              builder: (context, double value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: emeraldGreen.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.qr_code_2, // Fake QR Code
+                      color: emeraldGreen,
+                      size: 64,
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             const Text(
-              'Redemption Successful! 🎉',
+              'Voucher Saved! 🎉',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
             const SizedBox(height: 8),
-            Text(
-              'You\'ve redeemed ${reward.name}',
+            const Text(
+              'Present this QR code to the cashier to redeem your reward.',
               textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 16),
+            Container(
+              // Pseudo QR Code visual
+              height: 100,
+              width: 100,
+              color: Colors.black, // Placeholder for QR
+              child: Center(
+                child: Icon(Icons.qr_code, color: Colors.white, size: 80),
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
               '-${reward.points} points',
               style: const TextStyle(
-                color: hotPink,
+                color: Colors.red,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -745,8 +845,12 @@ class _RewardsScreenState extends State<RewardsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: emeraldGreen,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              child: const Text('Great!'),
+              child: const Text('Awesome!'),
             ),
           ),
         ],

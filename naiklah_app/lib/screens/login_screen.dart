@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/mock_user_service.dart';
+import '../services/user_service.dart';
 import 'home_screen.dart';
+import 'signup_screen.dart';
 
 /// Login screen with mock user authentication
 class LoginScreen extends StatefulWidget {
@@ -41,21 +43,17 @@ class _LoginScreenState extends State<LoginScreen> {
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 500));
 
-    final user = MockUserService.authenticate(
+    final success = await UserService().login(
       _emailController.text,
       _passwordController.text,
     );
 
-    if (user != null) {
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (_) => HomeScreen(userGender: user.gender),
-          ),
-          (route) => false,
-        );
-      }
+    if (success && mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
     } else {
       setState(() {
         _isLoading = false;
@@ -151,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: () =>
@@ -168,6 +166,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Guardian Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () =>
+                              _quickLogin(MockUserService.guardianUser),
+                          icon: const Icon(Icons.shield, size: 18),
+                          label: const Text('Mom (Guardian) 🛡️'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -262,11 +276,31 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Back
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('← Back'),
+                // Sign Up Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account? "),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SignupScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          color: hotPink,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 24),
               ],
             ),
           ),

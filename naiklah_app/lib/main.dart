@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
-import 'screens/welcome_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'screens/login_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint(
+      'Firebase initialization failed (Expected if google-services.json missing): $e',
+    );
+  }
   runApp(const NaikLahApp());
 }
 
@@ -43,7 +52,7 @@ class NaikLahApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const WelcomeScreen(),
+      home: const LoginScreen(),
     );
   }
 }

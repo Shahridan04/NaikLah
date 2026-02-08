@@ -9,6 +9,10 @@ class TripRecord {
   final DateTime timestamp;
   final int pointsEarned;
   final double co2Saved; // in kg
+  final Duration duration;
+  final double distance; // in km
+  final int routeDeviation;
+  final int stops;
 
   TripRecord({
     required this.id,
@@ -17,6 +21,10 @@ class TripRecord {
     required this.timestamp,
     required this.pointsEarned,
     required this.co2Saved,
+    required this.duration,
+    required this.distance,
+    required this.routeDeviation,
+    required this.stops,
   });
 
   String get formattedTime {

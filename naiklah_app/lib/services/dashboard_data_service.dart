@@ -68,6 +68,10 @@ class DashboardDataService {
         timestamp: DateTime(now.year, now.month, now.day, 8, 30),
         pointsEarned: 50,
         co2Saved: 0.8,
+        duration: const Duration(minutes: 24),
+        distance: 5.2,
+        routeDeviation: 0,
+        stops: 4,
       ),
       TripRecord(
         id: 't2',
@@ -76,6 +80,10 @@ class DashboardDataService {
         timestamp: DateTime(now.year, now.month, now.day, 18, 0),
         pointsEarned: 40,
         co2Saved: 0.6,
+        duration: const Duration(minutes: 15),
+        distance: 8.0,
+        routeDeviation: 0,
+        stops: 6,
       ),
       TripRecord(
         id: 't3',
@@ -84,6 +92,10 @@ class DashboardDataService {
         timestamp: now.subtract(const Duration(days: 1, hours: 12)),
         pointsEarned: 30,
         co2Saved: 0,
+        duration: const Duration(minutes: 10),
+        distance: 0.8,
+        routeDeviation: 0,
+        stops: 0,
       ),
       TripRecord(
         id: 't4',
@@ -92,6 +104,10 @@ class DashboardDataService {
         timestamp: now.subtract(const Duration(days: 1, hours: 16)),
         pointsEarned: 50,
         co2Saved: 0.8,
+        duration: const Duration(minutes: 35),
+        distance: 7.5,
+        routeDeviation: 1,
+        stops: 8,
       ),
     ];
   }

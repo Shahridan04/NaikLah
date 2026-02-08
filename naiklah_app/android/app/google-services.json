@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "665131914638",
+    "project_id": "naiklah-71b38",
+    "storage_bucket": "naiklah-71b38.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:665131914638:android:c044d9978986b4bc6bc0df",
+        "android_client_info": {
+          "package_name": "com.example.naiklah_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcivI2pAvio6yu9l1g_Puc_kJuDlIMWWs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

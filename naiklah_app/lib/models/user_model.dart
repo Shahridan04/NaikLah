@@ -8,6 +8,9 @@ class UserModel {
   final List<String> preferredTransport;
   final bool prefersWomenOnlyTransport;
   final int points;
+  final String? phoneNumber;
+  final String? profilePictureUrl;
+  final bool isGuardian;
 
   const UserModel({
     required this.id,
@@ -18,6 +21,9 @@ class UserModel {
     this.preferredTransport = const [],
     this.prefersWomenOnlyTransport = false,
     this.points = 0,
+    this.phoneNumber,
+    this.profilePictureUrl,
+    this.isGuardian = false,
   });
 
   /// Check if user is female (can see Pink Bus options)
@@ -38,6 +44,9 @@ class UserModel {
     List<String>? preferredTransport,
     bool? prefersWomenOnlyTransport,
     int? points,
+    String? phoneNumber,
+    String? profilePictureUrl,
+    bool? isGuardian,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -49,6 +58,9 @@ class UserModel {
       prefersWomenOnlyTransport:
           prefersWomenOnlyTransport ?? this.prefersWomenOnlyTransport,
       points: points ?? this.points,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      isGuardian: isGuardian ?? this.isGuardian,
     );
   }
 }

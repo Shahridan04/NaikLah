@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import '../services/user_service.dart';
 import 'home_screen.dart';
 
 /// Multi-step signup screen
@@ -92,8 +92,10 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _completeSignup() async {
     setState(() => _isLoading = true);
 
-    final authService = AuthService();
-    await authService.signUp(
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    UserService().signUp(
       name: _nameController.text.isNotEmpty ? _nameController.text : 'User',
       email: _emailController.text.isNotEmpty
           ? _emailController.text
@@ -108,9 +110,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => HomeScreen(userGender: _selectedGender),
-        ),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
         (route) => false,
       );
     }
