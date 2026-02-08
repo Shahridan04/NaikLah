@@ -101,41 +101,43 @@ class _ICScanScreenState extends State<ICScanScreen>
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.shield_outlined,
+                    color: Colors.blue,
+                    size: 32,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.shield_outlined,
-                  color: Colors.blue,
-                  size: 40,
+                const SizedBox(height: 16),
+                const Text(
+                  'Identity Verification',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Identity Verification',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                const SizedBox(height: 8),
+                const Text(
+                  'Verify your identity to secure your account',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Verify your identity to secure your account',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-              const SizedBox(height: 40),
-              Expanded(
-                child: Container(
+                const SizedBox(height: 24),
+                Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -150,96 +152,90 @@ class _ICScanScreenState extends State<ICScanScreen>
                   ),
                   child: Column(
                     children: [
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                       const Icon(
                         Icons.qr_code_scanner,
                         color: Colors.blue,
-                        size: 48,
+                        size: 40,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       const Text(
                         'Scan Your IC',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 8),
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 32.0),
+                        padding: EdgeInsets.symmetric(horizontal: 24.0),
                         child: Text(
                           'Place your Identity Card in front of the camera for scanning',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      const SizedBox(height: 24),
+                      // Camera Container with fixed height to prevent vertical expansion issues in ScrollView
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Container(
+                          height: 200, // Fixed height for mobile screens
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
                           child: Stack(
                             children: [
-                              // EDIT HERE: This Container defines the "box" for the camera.
-                              // If you want a specific height, wrap this in a SizedBox with a fixed height.
-                              // Currently it takes all available space because of the 'Expanded' parent.
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Colors.grey.shade200,
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: _isCameraInitialized
-                                      ? LayoutBuilder(
-                                          builder: (context, constraints) {
-                                            return SizedBox(
-                                              width: constraints.maxWidth,
-                                              height: constraints.maxHeight,
-                                              child: FittedBox(
-                                                // CHANGE FIT HERE: 'BoxFit.cover' fills the box (clipping edges).
-                                                // 'BoxFit.contain' shows the whole camera feed (adding black bars).
-                                                fit: BoxFit.cover,
-                                                child: SizedBox(
-                                                  width: constraints.maxWidth,
-                                                  height:
-                                                      constraints.maxWidth /
-                                                      _cameraController!
-                                                          .value
-                                                          .aspectRatio,
-                                                  child: CameraPreview(
-                                                    _cameraController!,
-                                                  ),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: _isCameraInitialized
+                                    ? LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          return SizedBox(
+                                            width: constraints.maxWidth,
+                                            height: constraints.maxHeight,
+                                            child: FittedBox(
+                                              fit: BoxFit.cover,
+                                              child: SizedBox(
+                                                width: constraints.maxWidth,
+                                                height:
+                                                    constraints.maxWidth /
+                                                    _cameraController!
+                                                        .value
+                                                        .aspectRatio,
+                                                child: CameraPreview(
+                                                  _cameraController!,
                                                 ),
                                               ),
-                                            );
-                                          },
-                                        )
-                                      : Center(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.camera_alt_outlined,
-                                                size: 64,
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.camera_alt_outlined,
+                                              size: 48,
+                                              color: Colors.grey.shade400,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              _cameraRequested
+                                                  ? 'Initializing...'
+                                                  : 'Camera inactive',
+                                              style: TextStyle(
                                                 color: Colors.grey.shade400,
+                                                fontSize: 12,
                                               ),
-                                              const SizedBox(height: 12),
-                                              Text(
-                                                _cameraRequested
-                                                    ? 'Initializing...'
-                                                    : 'Camera inactive',
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade400,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                ),
+                                      ),
                               ),
                               // Scan Frame Overlay
                               _buildScanFrame(),
@@ -251,8 +247,7 @@ class _ICScanScreenState extends State<ICScanScreen>
                                     return Positioned(
                                       top:
                                           _controller.value *
-                                          (MediaQuery.of(context).size.height *
-                                              0.3), // Approximate height
+                                          180, // Bound by height
                                       left: 0,
                                       right: 0,
                                       child: Container(
@@ -283,12 +278,12 @@ class _ICScanScreenState extends State<ICScanScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24.0),
                         child: SizedBox(
                           width: double.infinity,
-                          height: 56,
+                          height: 52,
                           child: ElevatedButton(
                             onPressed: _isScanning
                                 ? null
@@ -326,7 +321,7 @@ class _ICScanScreenState extends State<ICScanScreen>
                                               ? 'Start Scanning'
                                               : 'Open Camera',
                                           style: const TextStyle(
-                                            fontSize: 18,
+                                            fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         )),
@@ -334,21 +329,24 @@ class _ICScanScreenState extends State<ICScanScreen>
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        'Facial recognition will be activated automatically after IC scan',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 12,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          'Facial recognition will be activated automatically after IC scan',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 11,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 40),
-            ],
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),

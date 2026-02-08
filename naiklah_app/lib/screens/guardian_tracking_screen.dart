@@ -79,41 +79,8 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
             ),
           ),
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.pink),
-              onPressed: () {
-                // Reset mechanism for demo purposes if needed
-                setState(() => _isFollowingUser = true);
-              },
-            ),
-          ),
-        ],
       ),
-      floatingActionButton: _isFollowingUser
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () {
-                setState(() => _isFollowingUser = true);
-              },
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.pink,
-              elevation: 4,
-              icon: const Icon(Icons.center_focus_strong),
-              label: const Text("Re-center"),
-            ),
+      floatingActionButton: null,
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('trips')
@@ -128,32 +95,19 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.directions_bus_outlined,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
-                  Text('Waiting for trip to start...'),
-                ],
-              ),
-            );
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          final status = data?['status'] as String? ?? 'ended';
+          final locationData =
+              data?['currentLocation'] as Map<String, dynamic>?;
+
+          if (!snapshot.hasData ||
+              !snapshot.data!.exists ||
+              status != 'active' ||
+              locationData == null) {
+            return _buildEmptyState();
           }
 
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final status = data['status'] as String? ?? 'ended';
-          final isDeviation = data['isDeviation'] as bool? ?? false;
-          final locationData = data['currentLocation'] as Map<String, dynamic>?;
-
-          if (locationData == null) {
-            return const Center(child: Text('No location data available'));
-          }
-
+          final isDeviation = data?['isDeviation'] as bool? ?? false;
           final lat = locationData['latitude'] as double;
           final lng = locationData['longitude'] as double;
           final LatLng newTarget = LatLng(lat, lng);
@@ -270,6 +224,19 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
                 },
               ),
 
+              // Re-center Button (Top Right)
+              if (!_isFollowingUser)
+                Positioned(
+                  top: 100,
+                  right: 16,
+                  child: FloatingActionButton.small(
+                    onPressed: () => setState(() => _isFollowingUser = true),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.pink,
+                    child: const Icon(Icons.center_focus_strong),
+                  ),
+                ),
+
               // Bus Detail & Status Card
               Positioned(
                 bottom: 30,
@@ -286,6 +253,35 @@ class _GuardianTrackingScreenState extends State<GuardianTrackingScreen>
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.directions_bus_outlined,
+            size: 64,
+            color: Colors.grey,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Waiting for trip to start...',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Check back soon for Sarah\'s trip status',
+            style: TextStyle(color: Colors.grey.shade400),
+          ),
+        ],
       ),
     );
   }

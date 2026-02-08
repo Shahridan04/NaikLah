@@ -68,64 +68,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.only(top: 60, bottom: 20, left: 20, right: 20),
+      padding: const EdgeInsets.only(top: 50, bottom: 24, left: 24, right: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _themeColor,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: _themeColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         children: [
+          // Logo at the top of profile
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E3A5F), // Navy for contrast
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Image.asset(
+              'assets/logo/logo.png',
+              height: 24,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(height: 24),
           Row(
             children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: _themeColor.withOpacity(0.1),
-                child: Icon(Icons.person, size: 40, color: _themeColor),
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                ),
+                child: CircleAvatar(
+                  radius: 35,
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  child: const Icon(
+                    Icons.person,
+                    size: 35,
+                    color: Colors.white,
+                  ),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        const Text(
+                        Text(
                           'Sarah Wong',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: Colors.white,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.verified,
-                          color: Colors.blue,
-                          size: 20,
-                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.verified, color: Colors.white, size: 18),
                       ],
                     ),
                     Text(
                       'Gold Member',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade600,
+                        color: Colors.white.withOpacity(0.9),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                onPressed: () {},
-                color: Colors.grey,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.edit_outlined, color: Colors.white),
+                  onPressed: () {},
+                ),
               ),
             ],
           ),

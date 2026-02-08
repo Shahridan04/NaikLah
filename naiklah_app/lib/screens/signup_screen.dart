@@ -20,6 +20,7 @@ class _SignupScreenState extends State<SignupScreen> {
   static const Color emeraldGreen = Color(0xFF10B981);
   static const Color lightPink = Color(0xFFFDF2F8);
   static const Color lightBlue = Color(0xFFEFF6FF);
+  static const Color navy = Color(0xFF1E3A5F);
 
   // Form Controllers
   final _nameController = TextEditingController();
@@ -118,6 +119,31 @@ class _SignupScreenState extends State<SignupScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              const SizedBox(height: 16),
+              // Brand Logo
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: navy,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: navy.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  'assets/logo/logo.png',
+                  height: 20,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 8),
               // Progress indicator
               _buildProgressIndicator(),
               // Content

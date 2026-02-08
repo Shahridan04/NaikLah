@@ -151,33 +151,59 @@ class _RewardsScreenState extends State<RewardsScreen>
   }
 
   Widget _buildHeader(UserModel? user) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // FIX: Expanded to prevent overflow
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Rewards',
-                style: TextStyle(
-                  color: textDark,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -1,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Exclusive benefits for you',
-                style: TextStyle(color: textGrey, fontSize: 16),
+        // Brand Logo
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: darkPlatinum,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: darkPlatinum.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
+          child: Image.asset(
+            'assets/logo/logo.png',
+            height: 22,
+            fit: BoxFit.contain,
+          ),
         ),
-        const SizedBox(width: 16),
-        _buildHistoryButton(),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // FIX: Expanded to prevent overflow
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Rewards',
+                    style: TextStyle(
+                      color: textDark,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Exclusive benefits for you',
+                    style: TextStyle(color: textGrey, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            _buildHistoryButton(),
+          ],
+        ),
       ],
     );
   }
