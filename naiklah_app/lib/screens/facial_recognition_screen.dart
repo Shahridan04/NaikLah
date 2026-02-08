@@ -190,7 +190,7 @@ class _FacialRecognitionScreenState extends State<FacialRecognitionScreen> {
                         style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                       const SizedBox(height: 20),
-                      // Circular Camera Placeholder
+                      // EDIT HERE: Change these values (180, 180) to make the circle bigger or smaller
                       Container(
                         width: 180,
                         height: 180,
@@ -210,6 +210,8 @@ class _FacialRecognitionScreenState extends State<FacialRecognitionScreen> {
                                       width: constraints.maxWidth,
                                       height: constraints.maxHeight,
                                       child: FittedBox(
+                                        // CHANGE FIT HERE: 'BoxFit.cover' is usually best for selfies
+                                        // 'BoxFit.contain' will show the whole feed inside the circle
                                         fit: BoxFit.cover,
                                         child: SizedBox(
                                           width: constraints.maxWidth,

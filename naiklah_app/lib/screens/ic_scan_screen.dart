@@ -179,6 +179,9 @@ class _ICScanScreenState extends State<ICScanScreen>
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: Stack(
                             children: [
+                              // EDIT HERE: This Container defines the "box" for the camera.
+                              // If you want a specific height, wrap this in a SizedBox with a fixed height.
+                              // Currently it takes all available space because of the 'Expanded' parent.
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.black,
@@ -196,6 +199,8 @@ class _ICScanScreenState extends State<ICScanScreen>
                                               width: constraints.maxWidth,
                                               height: constraints.maxHeight,
                                               child: FittedBox(
+                                                // CHANGE FIT HERE: 'BoxFit.cover' fills the box (clipping edges).
+                                                // 'BoxFit.contain' shows the whole camera feed (adding black bars).
                                                 fit: BoxFit.cover,
                                                 child: SizedBox(
                                                   width: constraints.maxWidth,
