@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'facial_recognition_screen.dart';
 
 class ICScanScreen extends StatefulWidget {
@@ -12,6 +14,9 @@ class _ICScanScreenState extends State<ICScanScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool _isScanning = false;
+  CameraController? _cameraController;
+  bool _isCameraInitialized = false;
+  bool _cameraRequested = false;
 
   @override
   void initState() {
@@ -22,9 +27,47 @@ class _ICScanScreenState extends State<ICScanScreen>
     );
   }
 
+  Future<void> _initializeCamera() async {
+    setState(() => _cameraRequested = true);
+
+    final status = await Permission.camera.request();
+    if (status.isGranted) {
+      try {
+        final cameras = await availableCameras();
+        if (cameras.isNotEmpty) {
+          _cameraController = CameraController(
+            cameras.first, // back camera
+            ResolutionPreset.high,
+            enableAudio: false,
+          );
+
+          await _cameraController!.initialize();
+          if (mounted) {
+            setState(() => _isCameraInitialized = true);
+          }
+        }
+      } catch (e) {
+        debugPrint('Error initializing camera: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Camera error: $e')));
+        }
+      }
+    } else {
+      if (mounted) {
+        setState(() => _cameraRequested = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Camera permission denied')),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
+    _cameraController?.dispose();
     super.dispose();
   }
 
@@ -138,30 +181,59 @@ class _ICScanScreenState extends State<ICScanScreen>
                             children: [
                               Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
+                                  color: Colors.black,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: Colors.grey.shade200,
                                   ),
                                 ),
-                                child: Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.camera_alt_outlined,
-                                        size: 64,
-                                        color: Colors.grey.shade400,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        'Position your IC here',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade400,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: _isCameraInitialized
+                                      ? LayoutBuilder(
+                                          builder: (context, constraints) {
+                                            return SizedBox(
+                                              width: constraints.maxWidth,
+                                              height: constraints.maxHeight,
+                                              child: FittedBox(
+                                                fit: BoxFit.cover,
+                                                child: SizedBox(
+                                                  width: constraints.maxWidth,
+                                                  height:
+                                                      constraints.maxWidth /
+                                                      _cameraController!
+                                                          .value
+                                                          .aspectRatio,
+                                                  child: CameraPreview(
+                                                    _cameraController!,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      : Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.camera_alt_outlined,
+                                                size: 64,
+                                                color: Colors.grey.shade400,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Text(
+                                                _cameraRequested
+                                                    ? 'Initializing...'
+                                                    : 'Camera inactive',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade400,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ),
                               // Scan Frame Overlay
@@ -213,7 +285,11 @@ class _ICScanScreenState extends State<ICScanScreen>
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: _isScanning ? null : _startScanning,
+                            onPressed: _isScanning
+                                ? null
+                                : (_isCameraInitialized
+                                      ? _startScanning
+                                      : _initializeCamera),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
@@ -231,13 +307,24 @@ class _ICScanScreenState extends State<ICScanScreen>
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Text(
-                                    'Start Scanning',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                : (_cameraRequested && !_isCameraInitialized
+                                      ? const SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          _isCameraInitialized
+                                              ? 'Start Scanning'
+                                              : 'Open Camera',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )),
                           ),
                         ),
                       ),
